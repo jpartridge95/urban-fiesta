@@ -2,7 +2,6 @@ import sqlite3, hashlib, binascii, os
 from pathlib import Path
 
 def add_student():
-#adds a student to database
     conn = sqlite3.connect("studentdb.db")
     c = conn.cursor()
     
