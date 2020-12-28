@@ -1,4 +1,4 @@
-import sqlite3, hashlib, binascii, os
+import sqlite3, hashlib, binascii, os, pandas
 from pathlib import Path
 
 def add_student():
@@ -55,7 +55,7 @@ def search_student():
     else:
         print ("Please enter either 1, 2 or 3")
         repeat = input("Do you wish to try again? y/n: ")
-        if repeat == "y" or "Y":
+        if repeat == "y" or repeat == "Y":
             search_student()
     
     conn.close()
@@ -65,17 +65,45 @@ def remove_student():
     c = conn.cursor()
     #Student lookup
     search = input("Enter the student's name: ")
-        for row in c.execute("SELECT * FROM Students WHERE name = ?", search):
+    for row in c.execute("SELECT * FROM Students WHERE name = ?", search):
         print (rowid, ": ", row)
     row_identifier = input("Enter the student's unique identification number: ")
     #Student Delete
     c.execute("DELETE FROM Students WHERE rowid = ?", row_identifier)
     
+    conn.commit()
     conn.close.()
 
-#def edit_student_file():
+def edit_student_file():
+    conn = sqlite3.connect("studentdb.db")
+    c = conn.cursor()
+    search = input("Enter the name of the student who's file you wish to edit: ")
+    for row in c.execute("SELECT * FROM Students WHERE name = ?", search):
+        print (rowid, ": ", row)
+    row_identifier = input("Enter the student's unique identification number: ")
+    which = input("""Which field do you wish to edit?  \n
+        name \ngender \nyeargroup \nclass \npredictedgrade \n
+        workingatgrade \nhomeworkin \nSEN \nOtherComments \n...""")
+    new_val = input("What should the new value be? ")
+    c.execute("""UPDATE Students SET ? = ? WHERE rowid = ?""", (which, new_val, row_identifier))
+    conn.commit()
+    conn.close()
+    
+    
 
-#def import_db():
+def import_db():
+    conn = sqlite3.connect("studentdb.db")
+    c = conn.cursor()
+    safety = input("WARNING, before you do this ensure you have made a copy. Do you wish to proceed? y/n: ")
+    if safety != "y" and safety != "Y":
+        print ("Response recieved, aborting operation")
+        return
+    file_name = input("Please specify a file path with valid extension: ")
+    db_vals_csv = pandas.readcsv(file_name)
+    db_vals_csv.to_sql("Students", conn, if_exists="append", index = False)
+    conn.commit()
+    conn.close()
+    
 
 def initialise_files():
     if Path("studentdb.db").is_file():
