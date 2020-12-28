@@ -47,10 +47,10 @@ def search_student():
         name \ngender \nyeargroup \nclass \npredictedgrade \n
         workingatgrade \nhomeworkin \nSEN \nOtherComments \n...""")
         search_query = input("Enter search term: ")
-        for row in c.execute("SELECT * FROM Students WHERE ? = ?", (search_attribute, search_query))
+        for row in c.execute("SELECT * FROM Students WHERE ? = ?", (search_attribute, search_query)):
             print (row)
     elif response == 3:
-        for row in c.execute("SELECT * FROM Students")
+        for row in c.execute("SELECT * FROM Students"):
             print (row)
     else:
         print ("Please enter either 1, 2 or 3")
@@ -65,21 +65,21 @@ def remove_student():
     c = conn.cursor()
     #Student lookup
     search = input("Enter the student's name: ")
-    for row in c.execute("SELECT * FROM Students WHERE name = ?", search):
-        print (rowid, ": ", row)
+    for row in c.execute("SELECT rowid, * FROM Students WHERE name = ?", search):
+        print (row)
     row_identifier = input("Enter the student's unique identification number: ")
     #Student Delete
     c.execute("DELETE FROM Students WHERE rowid = ?", row_identifier)
     
     conn.commit()
-    conn.close.()
+    conn.close()
 
 def edit_student_file():
     conn = sqlite3.connect("studentdb.db")
     c = conn.cursor()
     search = input("Enter the name of the student who's file you wish to edit: ")
-    for row in c.execute("SELECT * FROM Students WHERE name = ?", search):
-        print (rowid, ": ", row)
+    for row in c.execute("SELECT rowid, * FROM Students WHERE name = ?", search):
+        print (row)
     row_identifier = input("Enter the student's unique identification number: ")
     which = input("""Which field do you wish to edit?  \n
         name \ngender \nyeargroup \nclass \npredictedgrade \n
@@ -93,7 +93,6 @@ def edit_student_file():
 
 def import_db():
     conn = sqlite3.connect("studentdb.db")
-    c = conn.cursor()
     safety = input("WARNING, before you do this ensure you have made a copy. Do you wish to proceed? y/n: ")
     if safety != "y" and safety != "Y":
         print ("Response recieved, aborting operation")
@@ -150,12 +149,12 @@ def hash_password(password):
     # personal combining both salt and hashed pw and decoding from utf-8
     return (salt + pass_hash).decode("ascii")
 
-def check_password(stored_pass, provided_pass):
+def check_password(provided_pass, stored_pass):
     salt = stored_pass[:64]
     password = stored_pass[64:]
     pass_hash = hashlib.pbkdf2_hmac("sha256", provided_pass.encode("utf-8"), salt, 100000)
     pass_hash = binascii.hexlify(pass_hash).encode("ascii")
-    return (pass_hash == stored_pass)
+    return (pass_hash == password)
 
 #def new_user():
 
