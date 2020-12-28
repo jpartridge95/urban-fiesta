@@ -122,7 +122,12 @@ def hash_password(password):
     # personal combining both salt and hashed pw and decoding from utf-8
     return (salt + pass_hash).decode("ascii")
 
-#def check_password(password):
+def check_password(stored_pass, provided_pass):
+    salt = stored_pass[:64]
+    password = stored_pass[64:]
+    pass_hash = hashlib.pbkdf2_hmac("sha256", provided_pass.encode("utf-8"), salt, 100000)
+    pass_hash = binascii.hexlify(pass_hash).encode("ascii")
+    return (pass_hash == stored_pass)
 
 #def new_user():
 
