@@ -40,18 +40,52 @@ def search_student():
     conn = sqlite3.connect("studentdb.db")
     c = conn.cursor()
     
-    response = input("[1] Search by name \n[2] Search by attribute \n[3] Return all\n...")
+    response = int(input("[1] Search by name \n[2] Search by attribute \n[3] Return all\n..."))
     if response == 1:
-        search = input("Enter the student's name: ")
+        response = input("Enter the student's name: ")
+        search = [response]
         for row in c.execute("SELECT * FROM Students WHERE name = ?", search):
             print (row)        
     elif response == 2:
-        search_attribute = input("""Which attribute do you want to search by? \n
-        name \ngender \nyeargroup \nclass \npredictedgrade \n
-        workingatgrade \nhomeworkin \nSEN \nOtherComments \n...""")
+        search_attribute = str(input("""Which attribute do you want to search by? \n
+        name \n
+        gender \n
+        yeargroup \n
+        class \n
+        predictedgrade \n
+        workingatgrade \n
+        homeworkin \n
+        SEN \n
+        OtherComments \n
+        ..."""))
         search_query = input("Enter search term: ")
-        for row in c.execute("SELECT * FROM Students WHERE ? = ?", (search_attribute, search_query)):
-            print (row)
+        if search_attribute == "name":
+            for row in c.execute("SELECT * FROM Students WHERE name = ?", [search_query]):
+                print (row)
+        elif search_attribute == "gender":
+            for row in c.execute("SELECT * FROM Students WHERE gender = ?", [search_query]):
+                print (row)
+        elif search_attribute == "yeargroup":
+            for row in c.execute("SELECT * FROM Students WHERE yeargroup = ?", [search_query]):
+                print (row)
+        elif search_attribute == "class":
+            for row in c.execute("SELECT * FROM Students WHERE class = ?", [search_query]):
+                print (row)
+        elif search_attribute == "predictedgrade":
+            for row in c.execute("SELECT * FROM Students WHERE predictedgrade = ?", [search_query]):
+                print (row)
+        elif search_attribute == "workingatgrade":
+            for row in c.execute("SELECT * FROM Students WHERE workingatgrade = ?", [search_query]):
+                print (row)
+        elif search_attribute == "homeworkin":
+            for row in c.execute("SELECT * FROM Students WHERE homeworkin = ?", [search_query]):
+                print(row)
+        elif search_attribute == "SEN":
+            for row in c.execute("SELECT * FROM Students WHERE SEN LIKE %?%", [search_query]):
+                print (row)
+        elif search_attribute == "OtherComments":
+            for row in c.execute("SELECT * FROM Students WHERE OtherComments = ?", [search_query]):
+                print (row)
     elif response == 3:
         for row in c.execute("SELECT * FROM Students"):
             print (row)
@@ -67,12 +101,13 @@ def remove_student():
     conn = sqlite3.connect("studentdb.db")
     c = conn.cursor()
     #Student lookup
-    search = input("Enter the student's name: ")
-    for row in c.execute("SELECT rowid, * FROM Students WHERE name = ?", search):
+    response = input("Enter the student's name: ")
+    for row in c.execute("SELECT rowid, * FROM Students WHERE name = ?", [response]):
         print (row)
     row_identifier = input("Enter the student's unique identification number: ")
     #Student Delete
-    c.execute("DELETE FROM Students WHERE rowid = ?", row_identifier)
+    c.execute("DELETE FROM Students WHERE rowid = ?", [row_identifier])
+    print("Student: {}, rowid: {} has been deleted from the database".format(response, row_identifier))
     
     conn.commit()
     conn.close()
@@ -80,15 +115,42 @@ def remove_student():
 def edit_student_file():
     conn = sqlite3.connect("studentdb.db")
     c = conn.cursor()
-    search = input("Enter the name of the student who's file you wish to edit: ")
+    response = input("Enter the name of the student who's file you wish to edit: ")
+    search = [response]
     for row in c.execute("SELECT rowid, * FROM Students WHERE name = ?", search):
         print (row)
-    row_identifier = input("Enter the student's unique identification number: ")
-    which = input("""Which field do you wish to edit?  \n
-        name \ngender \nyeargroup \nclass \npredictedgrade \n
-        workingatgrade \nhomeworkin \nSEN \nOtherComments \n...""")
+    row_identifier = int(input("Enter the student's unique identification number: "))
+    search_attribute = input("""Which field do you wish to edit? \n
+    name \n
+    gender \n
+    yeargroup \n
+    class \n
+    predictedgrade \n
+    workingatgrade \n
+    homeworkin \n
+    SEN \n
+    OtherComments \n
+    ...""")
     new_val = input("What should the new value be? ")
-    c.execute("""UPDATE Students SET ? = ? WHERE rowid = ?""", (which, new_val, row_identifier))
+    search_query = [new_val, row_identifier]
+    if search_attribute == "name":
+        c.execute("UPDATE Students SET name = ? WHERE rowid = ?", search_query)
+    elif search_attribute == "gender":
+        c.execute("UPDATE Students SET gender = ? WHERE rowid = ?", search_query)
+    elif search_attribute == "yeargroup":
+        c.execute("UPDATE Students SET yeargroup = ? WHERE rowid = ?", search_query)
+    elif search_attribute == "class":
+        c.execute("UPDATE Students SET class = ? WHERE rowid = ?", search_query)
+    elif search_attribute == "predictedgrade":
+        c.execute("UPDATE Students SET predictedgrade = ? WHERE rowid = ?", search_query)
+    elif search_attribute == "workingatgrade":
+        c.execute("UPDATE Students SET workingatgrade = ? WHERE rowid = ?", search_query)
+    elif search_attribute == "homeworkin":
+        c.execute("UPDATE Students SET homeworkin = ? WHERE rowid = ?", search_query)
+    elif search_attribute == "SEN":
+        c.execute("UPDATE Students SET SEN = ? WHERE rowid = ?", search_query)
+    elif search_attribute == "OtherComments":
+        c.execute("UPDATE Students SET OtherComments = ? WHERE rowid = ?", search_query)
     conn.commit()
     conn.close()
     
@@ -155,7 +217,7 @@ def initialise_files():
             child integer,
             email text,
             phone text
-        """)
+        )""")
         conn.commit()
         conn.close()
     
@@ -180,8 +242,8 @@ def hash_password(password):
 def check_password(provided_pass, stored_pass):
     salt = stored_pass[:64]
     password = stored_pass[64:]
-    pass_hash = hashlib.pbkdf2_hmac("sha256", provided_pass.encode("utf-8"), salt, 100000)
-    pass_hash = binascii.hexlify(pass_hash).encode("ascii")
+    pass_hash = hashlib.pbkdf2_hmac("sha256", provided_pass.encode("utf-8"), salt.encode("ascii"), 100000)
+    pass_hash = binascii.hexlify(pass_hash).decode("ascii")
     return (pass_hash == password)
 
 def new_user():
@@ -227,11 +289,20 @@ def login():
 
     inp_username = input("Enter your username: ")
     inp_password = input("Enter your password: ")
-    stored_pass = c.execute("""SELECT password FROM UserInfo WHERE username = ?""", inp_username)
+
+    username = [inp_username]
+
+    try:
+        c.execute("""SELECT password FROM UserInfo WHERE username = ?""", username)
+        stored_pass = c.fetchone()[0]
+    except(TypeError):
+        print ("Login failed, username not found")
 
     if check_password(inp_password, stored_pass):
-        current_user = c.execute("""SELECT username FROM UserInfo WHERE username = ?""", inp_username)
-        current_auth = c.execute("""SELECT auth FROM UserInfo WHERE username = ?""", inp_username)
+        c.execute("""SELECT username FROM UserInfo WHERE username = ?""", username)
+        current_user = c.fetchone()[0]
+        c.execute("""SELECT auth FROM UserInfo WHERE username = ?""", username)
+        current_auth = c.fetchone()[0]
     else:
         print ("Login failed please try again.")
     
@@ -244,11 +315,11 @@ def assign_auth():
     conn = sqlite3.connect("userinfo.db")
     c = conn.cursor()
     inp_username = input("Enter the username of the profile you wish to edit permissions of: ")
-    inp_auth = int(input("""Which access level do you want to grant %s?\n
+    inp_auth = int(input("""Which access level do you want to grant? {}\n
     [1] admin\n
     [2] teacher\n
     [3] parent\n
-    ...""", inp_username))
+    ...""".format(inp_username)))
     if inp_auth == 1:
         auth_val = "admin"
     elif inp_auth == 2:
@@ -257,7 +328,7 @@ def assign_auth():
         auth_val = "parent"
     else:
         print("Please enter 1, 2 or 3 for the corresponding value")
-    c.execute("""UPDATE UserInfo SET auth = ? WHERE username = ?""", (auth_val, inp_username))
+    c.execute("""UPDATE UserInfo SET auth = ? WHERE username = ?""", [auth_val, inp_username])
     
     conn.commit()
     conn.close()
@@ -285,6 +356,27 @@ def add_parent():
     conn.commit()
     conn.close()
 
+def search_users():
+    conn = sqlite3.connect("studentdb.db")
+    c = conn.cursor()
+    
+    response = int(input("[1] Search by username \n[2] Return all\n..."))
+    if response == 1:
+        response = input("Enter the user's username: ")
+        search = [response]
+        for row in c.execute("SELECT * FROM UserInfo WHERE username = ?", search):
+            print (row)        
+    elif response == 2:
+        for row in c.execute("SELECT * FROM Students"):
+            print (row)
+    else:
+        print ("Please enter either 1 or 2")
+        repeat = input("Do you wish to try again? y/n: ")
+        if repeat == "y" or repeat == "Y":
+            search_users()
+    
+    conn.close()
+
 def parent_check_record():
     conn = sqlite3.connect("parentdb.db")
     c = conn.cursor()
@@ -294,7 +386,7 @@ def parent_check_record():
     if current_user == "unnassigned":
         print ("Log in to access child records")
         return
-    c.executemany("""RETURN child FROM Parents WHERE username = ?""", current_user)
+    c.executemany("""RETURN child FROM Parents WHERE username = ?""", [current_user])
     for child in c.fetchall():
         child_id.append(child)
     conn.close()
@@ -303,8 +395,7 @@ def parent_check_record():
     c = conn.cursor()
 
     for i in child_id:
-        c.execute("""RETURN name, class, predictedgrade, homeworkin, OtherComments FROM Students WHERE rowid = ?""", i)
-        print (c.fetchone())
+        c.execute("""RETURN name, class, predictedgrade, homeworkin, OtherComments FROM Students WHERE rowid = ?""", [i])
     
     conn.close()
 
@@ -313,7 +404,7 @@ def remove_user():
     c = conn.cursor()
     user_input = str(input("Enter the username of the user you wish to delete: "))
 
-    c.execute("""DELETE FROM UserInfo WHERE username = ?""", user_input)
+    c.execute("""DELETE FROM UserInfo WHERE username = ?""", [user_input])
     conn.commit()
     conn.close()
 
@@ -367,7 +458,8 @@ def run():
                 [7] Remove user from database\n
                 [8] Add parent to parent database\n
                 [9] Assign authorisation\n
-                [10] Import a csv file to student database\n
+                [10] Search user records \n
+                [11] Import a csv file to student database\n
                 [0] Exit Program\n
                 ..."""))
                 if user_input == 1:
@@ -389,12 +481,15 @@ def run():
                 elif user_input == 9:
                     assign_auth()
                 elif user_input == 10:
+                    search_users()
+                elif user_input == 11:
                     import_db()
         elif user_input == 3:
             boot_auth = str(input("Enter the password to initialise files: "))
             if boot_auth == "StrawberryLaces":
                 initialise_files()
                 
+run()
 
 # Perhaps a function to open and close connections would have saved time.
 # Auth types, admin, teacher, parent, unnassigned. Goal to use this as a shared teacher parent metrics system, 
